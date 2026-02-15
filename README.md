@@ -1,6 +1,6 @@
 # Cloudflare Workers Chat Demo
 
-[![Deploy to Cloudflare][cloudflarebutton]]
+[![Deploy to Cloudflare][![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/bilbywilby/lexicon-core-forensic-semantic-api-platform)]
 
 A full-stack real-time chat application built with Cloudflare Workers and Durable Objects. Features user management, chat rooms, and message persistence using a single shared Durable Object for efficient multi-entity storage. The modern React frontend uses Shadcn UI, Tanstack Query, and Tailwind CSS.
 
@@ -132,7 +132,7 @@ This builds assets and deploys via Wrangler. Requires:
 
 For instant deployment:
 
-[cloudflarebutton]
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/bilbywilby/lexicon-core-forensic-semantic-api-platform)
 
 **Custom Domain/Assets**: Update `wrangler.jsonc` for bindings/migrations.
 
