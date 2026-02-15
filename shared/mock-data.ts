@@ -26,6 +26,7 @@ export const MOCK_CHECKPOINTS: Checkpoint[] = [
   {
     id: 'cp-001',
     hash: '0x7f83b2a1c9e4d5f06123456789abcdef',
+    version: 1,
     trigger: 'scheduled',
     status: 'verified',
     timestamp: Date.now() - 86400000,
@@ -33,6 +34,7 @@ export const MOCK_CHECKPOINTS: Checkpoint[] = [
   {
     id: 'cp-002',
     hash: '0x1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d',
+    version: 2,
     trigger: 'manual',
     status: 'verified',
     timestamp: Date.now() - 43200000,

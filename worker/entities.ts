@@ -24,7 +24,7 @@ export class CheckpointEntity extends IndexedEntity<Checkpoint> {
     status: "pending",
     timestamp: 0
   };
-  static seedData = MOCK_CHECKPOINTS.map((cp, i) => ({ ...cp, version: i + 1 }));
+  static seedData = MOCK_CHECKPOINTS;
 }
 export class LogEntity extends IndexedEntity<LogEvent> {
   static readonly entityName = "log";

@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Search, Zap, Info, Cpu, Fingerprint, Timer } from 'lucide-react';
+import { Search, Zap, Info, Cpu, Fingerprint, Timer, AlertCircle } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 export function QueryPage() {
   const [query, setQuery] = useState('');
