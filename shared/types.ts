@@ -7,6 +7,19 @@ export interface User {
   id: string;
   name: string;
 }
+export interface Chat {
+  id: string;
+  title: string;
+  lastMessage?: string;
+  updatedAt: number;
+}
+export interface ChatMessage {
+  id: string;
+  chatId: string;
+  content: string;
+  role: 'user' | 'assistant' | 'system';
+  timestamp: number;
+}
 export interface Memory {
   id: string;
   content: string;
@@ -21,9 +34,22 @@ export interface Memory {
 export interface Checkpoint {
   id: string;
   hash: string;
+  version: number;
   trigger: 'manual' | 'scheduled' | 'event';
   status: 'verified' | 'pending' | 'failed';
   timestamp: number;
+}
+export interface LogEvent {
+  id: string;
+  message: string;
+  type: 'ingest' | 'checkpoint' | 'retrieval' | 'system';
+  level: 'info' | 'warn' | 'error';
+  timestamp: number;
+}
+export interface IngestRequest {
+  content: string;
+  source: string;
+  category?: string;
 }
 export interface RetrievalRequest {
   query?: string;
@@ -45,4 +71,5 @@ export interface SystemMetrics {
   uptime: number;
   memoryCount: number;
   lastCheckpoint: Checkpoint | null;
+  recentLogs: LogEvent[];
 }
