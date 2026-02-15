@@ -1,23 +1,23 @@
 import React, { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { api } from '@/lib/api-client';
-import type { RetrievalRequest, RetrievalResponse, RetrievalResult } from '@shared/types';
+import type { RetrievalRequest, RetrievalResponse } from '@shared/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Search, Zap, Info, Cpu, Fingerprint, Timer, AlertCircle } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
+import { Search, Zap, Info, Cpu, Fingerprint, Timer, AlertCircle, Hash } from 'lucide-react';
 export function QueryPage() {
   const [query, setQuery] = useState('');
   const [topK, setTopK] = useState([5]);
   const [threshold, setThreshold] = useState([0.35]);
   const queryMutation = useMutation({
-    mutationFn: (req: RetrievalRequest) => api<RetrievalResponse>('/api/retrieve', { 
-      method: 'POST', 
-      body: JSON.stringify(req) 
+    mutationFn: (req: RetrievalRequest) => api<RetrievalResponse>('/api/v1/retrieve', {
+      method: 'POST',
+      body: JSON.stringify(req)
     }),
   });
   const handleSearch = () => {
@@ -58,7 +58,7 @@ export function QueryPage() {
               </div>
               <div className="p-3 rounded-lg bg-secondary/30 border border-border/40 space-y-2">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1">
-                  <Fingerprint className="h-3 w-3" /> Simulated Vector Fingerprint
+                  <Fingerprint className="h-3 w-3" /> Vector Signature
                 </p>
                 <div className="flex flex-wrap gap-1">
                   {mockVector.map((v, i) => (
@@ -96,11 +96,16 @@ export function QueryPage() {
                     <p className="text-sm text-muted-foreground">
                       Ranked {queryMutation.data.matches.length} matches
                     </p>
-                    <Badge variant="outline" className="gap-1 glass text-primary-foreground/70 bg-primary/10">
+                    <Badge variant="outline" className="gap-1 glass bg-primary/5">
                       <Timer className="h-3 w-3" /> {queryMutation.data.latencyMs}ms
                     </Badge>
                  </div>
-                 <Badge variant="outline" className="gap-1 glass border-primary/30"><Cpu className="h-3 w-3" /> Edge Inference</Badge>
+                 <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-mono bg-secondary/30 px-2 py-0.5 rounded border">
+                      <Hash className="h-3 w-3" /> TRACE: {queryMutation.data.traceId.slice(0, 8)}
+                    </div>
+                    <Badge variant="outline" className="gap-1 glass border-primary/30"><Cpu className="h-3 w-3" /> Inference Engine</Badge>
+                 </div>
                </div>
                {queryMutation.data.matches.map((match) => (
                  <Card key={match.id} className="glass border-l-4 border-primary shadow-sm hover:shadow-md transition-shadow">

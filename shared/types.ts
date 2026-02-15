@@ -45,6 +45,7 @@ export interface LogEvent {
   type: 'ingest' | 'checkpoint' | 'retrieval' | 'system';
   level: 'info' | 'warn' | 'error';
   timestamp: number;
+  metadata?: Record<string, unknown>;
 }
 export interface IngestRequest {
   content: string;
@@ -63,13 +64,19 @@ export interface RetrievalResult extends Memory {
 export interface RetrievalResponse {
   matches: RetrievalResult[];
   latencyMs: number;
+  traceId: string;
 }
 export interface SystemMetrics {
   latency: number[];
   requestCount: number;
   cacheHitRate: number;
-  uptime: number;
+  uptime: string;
+  do_sim: boolean;
   memoryCount: number;
   lastCheckpoint: Checkpoint | null;
   recentLogs: LogEvent[];
+  systemMetadata: {
+    nodeId: string;
+    region: string;
+  };
 }
