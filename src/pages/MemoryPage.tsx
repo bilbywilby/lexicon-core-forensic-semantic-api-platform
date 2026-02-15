@@ -22,7 +22,7 @@ export function MemoryPage() {
     queryFn: () => api<Memory[]>('/api/memories'),
   });
   const createMutation = useMutation({
-    mutationFn: (data: any) => api('/api/ingest', { method: 'POST', body: JSON.stringify(data) }),
+    mutationFn: (data: any) => api('/api/memories', { method: 'POST', body: JSON.stringify(data) }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['memories'] });
       toast.success('Memory indexed successfully');
@@ -77,7 +77,7 @@ export function MemoryPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-              <Button onClick={() => createMutation.mutate({ content, source, category: 'general' })}>
+              <Button onClick={() => createMutation.mutate({ content, metadata: { source, category: 'general', integrityHash: 'sha256-pending' } })}>
                 Generate Vector & Index
               </Button>
             </DialogFooter>

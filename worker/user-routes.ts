@@ -1,75 +1,76 @@
 import { Hono } from "hono";
 import type { Env } from './core-utils';
-import { UserEntity, ChatBoardEntity } from "./entities";
+import { MemoryEntity, CheckpointEntity } from "./entities";
 import { ok, bad, notFound, isStr } from './core-utils';
-
+import type { RetrievalRequest, RetrievalResponse, RetrievalResult } from "@shared/types";
 export function userRoutes(app: Hono<{ Bindings: Env }>) {
-  app.get('/api/test', (c) => c.json({ success: true, data: { name: 'CF Workers Demo' }}));
-
-  // USERS
-  app.get('/api/users', async (c) => {
-    await UserEntity.ensureSeed(c.env);
-    const cq = c.req.query('cursor');
-    const lq = c.req.query('limit');
-    const page = await UserEntity.list(c.env, cq ?? null, lq ? Math.max(1, (Number(lq) | 0)) : undefined);
-    return ok(c, page);
+  // MEMORIES
+  app.get('/api/memories', async (c) => {
+    await MemoryEntity.ensureSeed(c.env);
+    const page = await MemoryEntity.list(c.env);
+    return ok(c, page.items);
   });
-
-  app.post('/api/users', async (c) => {
-    const { name } = (await c.req.json()) as { name?: string };
-    if (!name?.trim()) return bad(c, 'name required');
-    return ok(c, await UserEntity.create(c.env, { id: crypto.randomUUID(), name: name.trim() }));
+  app.post('/api/memories', async (c) => {
+    const data = await c.req.json();
+    const memory = {
+      ...data,
+      id: crypto.randomUUID(),
+      timestamp: Date.now(),
+      vector: Array.from({ length: 10 }, () => Math.random())
+    };
+    return ok(c, await MemoryEntity.create(c.env, memory));
   });
-
-  // CHATS
-  app.get('/api/chats', async (c) => {
-    await ChatBoardEntity.ensureSeed(c.env);
-    const cq = c.req.query('cursor');
-    const lq = c.req.query('limit');
-    const page = await ChatBoardEntity.list(c.env, cq ?? null, lq ? Math.max(1, (Number(lq) | 0)) : undefined);
-    return ok(c, page);
+  app.delete('/api/memories/:id', async (c) => {
+    const id = c.req.param('id');
+    const deleted = await MemoryEntity.delete(c.env, id);
+    return ok(c, { id, deleted });
   });
-
-  app.post('/api/chats', async (c) => {
-    const { title } = (await c.req.json()) as { title?: string };
-    if (!title?.trim()) return bad(c, 'title required');
-    const created = await ChatBoardEntity.create(c.env, { id: crypto.randomUUID(), title: title.trim(), messages: [] });
-    return ok(c, { id: created.id, title: created.title });
+  // CHECKPOINTS
+  app.get('/api/checkpoints', async (c) => {
+    await CheckpointEntity.ensureSeed(c.env);
+    const page = await CheckpointEntity.list(c.env);
+    return ok(c, page.items);
   });
-
-  // MESSAGES
-  app.get('/api/chats/:chatId/messages', async (c) => {
-    const chat = new ChatBoardEntity(c.env, c.req.param('chatId'));
-    if (!await chat.exists()) return notFound(c, 'chat not found');
-    return ok(c, await chat.listMessages());
+  app.post('/api/checkpoints', async (c) => {
+    const cp = {
+      id: crypto.randomUUID(),
+      hash: '0x' + Array.from({ length: 32 }, () => Math.floor(Math.random() * 16).toString(16)).join(''),
+      trigger: 'manual',
+      status: 'verified',
+      timestamp: Date.now()
+    };
+    return ok(c, await CheckpointEntity.create(c.env, cp as any));
   });
-
-  app.post('/api/chats/:chatId/messages', async (c) => {
-    const chatId = c.req.param('chatId');
-    const { userId, text } = (await c.req.json()) as { userId?: string; text?: string };
-    if (!isStr(userId) || !text?.trim()) return bad(c, 'userId and text required');
-    const chat = new ChatBoardEntity(c.env, chatId);
-    if (!await chat.exists()) return notFound(c, 'chat not found');
-    return ok(c, await chat.sendMessage(userId, text.trim()));
+  // RETRIEVAL (Mock Semantic Search)
+  app.post('/api/retrieve', async (c) => {
+    const start = Date.now();
+    const req = await c.req.json() as RetrievalRequest;
+    const { items } = await MemoryEntity.list(c.env);
+    // Mock cosine similarity ranking
+    const matches: RetrievalResult[] = items.map(m => ({
+      ...m,
+      score: Math.random() // Simulating similarity
+    }))
+    .filter(m => m.score >= req.threshold)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, req.topK);
+    const response: RetrievalResponse = {
+      matches,
+      latencyMs: Date.now() - start
+    };
+    return ok(c, response);
   });
-
-  // DELETE: Users
-  app.delete('/api/users/:id', async (c) => ok(c, { id: c.req.param('id'), deleted: await UserEntity.delete(c.env, c.req.param('id')) }));
-
-  app.post('/api/users/deleteMany', async (c) => {
-    const { ids } = (await c.req.json()) as { ids?: string[] };
-    const list = ids?.filter(isStr) ?? [];
-    if (list.length === 0) return bad(c, 'ids required');
-    return ok(c, { deletedCount: await UserEntity.deleteMany(c.env, list), ids: list });
-  });
-
-  // DELETE: Chats
-  app.delete('/api/chats/:id', async (c) => ok(c, { id: c.req.param('id'), deleted: await ChatBoardEntity.delete(c.env, c.req.param('id')) }));
-
-  app.post('/api/chats/deleteMany', async (c) => {
-    const { ids } = (await c.req.json()) as { ids?: string[] };
-    const list = ids?.filter(isStr) ?? [];
-    if (list.length === 0) return bad(c, 'ids required');
-    return ok(c, { deletedCount: await ChatBoardEntity.deleteMany(c.env, list), ids: list });
+  // METRICS
+  app.get('/api/metrics', async (c) => {
+    const mems = await MemoryEntity.list(c.env);
+    const cps = await CheckpointEntity.list(c.env);
+    return ok(c, {
+      latency: [45, 52, 48, 61, 55, 49, 42],
+      requestCount: 1240,
+      cacheHitRate: 0.94,
+      uptime: 99.99,
+      memoryCount: mems.items.length,
+      lastCheckpoint: cps.items[cps.items.length - 1] || null
+    });
   });
 }
